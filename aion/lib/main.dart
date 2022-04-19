@@ -35,10 +35,14 @@ class SetTimer extends StatefulWidget {
 
 class _SetTimerState extends State<SetTimer> {
   static const timer_duration = Duration(minutes: 10);
+  Duration duration = Duration();
+  Duration second_duration = Duration(seconds: 1);
   final stopwatch = Stopwatch();
+  bool started = false;
+  Timer? timer;
   @override
   Widget build(BuildContext context) {
-    start_timer(timer_duration, stopwatch);
+    start_timer();
     return Container();
   }
 
@@ -51,15 +55,45 @@ class _SetTimerState extends State<SetTimer> {
 
   void timer_reset() {
     // resets the timer to initial state or the current value based on a flag
+    if (!started) {
+      setState(() => duration = Duration());
+    }
+    else {
+      setState(() => duration = timer_duration);
+
+    }
+  }
+
+  void start_timer() {
+    timer = Timer.periodic(second_duration, (timer) => { add_time() });
+  }
+
+  void add_time(){
+    final addseconds = started? 1 : -1;
+    setState(() {
+      final seconds = duration.inSeconds + addseconds;
+      if ( seconds < 0 ){
+        timer?.cancel();
+      }
+      else{
+        duration = Duration(seconds: seconds);
+      }
+    });
 
   }
+
+  void stop_timer(){
+    timer?.cancel();
+
+  }
+
 }
 
-Timer start_timer(time_seconds, stopwatch) {
-  var milliseconds = time_seconds * 1000;
-  stopwatch.start();
-  return Timer(Duration(milliseconds: milliseconds), () => {handleTimeout(stopwatch)});
-}
+// Timer start_timer(time_seconds, stopwatch) {
+//   var milliseconds = time_seconds * 1000;
+//   stopwatch.start();
+//   return Timer(Duration(milliseconds: milliseconds), () => {handleTimeout(stopwatch)});
+// }
 
 void handleTimeout(stopwatch){
   stopwatch.stop();
