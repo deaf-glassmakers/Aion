@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:html';
 import 'dart:ui';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -39,11 +40,13 @@ class SetTimer extends StatefulWidget {
 class _SetTimerState extends State<SetTimer> {
   static const int timer_minutes = 10;
   static const timer_duration = Duration(minutes: timer_minutes);
+  final timerValueController = TextEditingController(text: timer_minutes.toString());
   Duration duration = Duration(minutes: timer_minutes);
   Duration second_duration = Duration(seconds: 1);
   final stopwatch = Stopwatch();
   bool started = false;
   bool setup = true;
+  bool stopped = true;
   Timer? timer;
   @override
   Widget build(BuildContext context) {
@@ -62,18 +65,18 @@ class _SetTimerState extends State<SetTimer> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: <Widget>[
               setup? const Text(
-                "enter number of minutes here",
+                "enter minutes for timer here",
                 textAlign: TextAlign.center,
               ) : const Text(
-                  "running",
+                  "change number of minutes here",
                   textAlign: TextAlign.center,
               ),
               Center(
               child: TextFormField(
               textAlign: TextAlign.center,
               // initialValue: timer_minutes.toString(),
-              initialValue: timer_minutes.toString(),
               keyboardType: TextInputType.number,
+              controller: timerValueController,
               inputFormatters: [
                 FilteringTextInputFormatter.digitsOnly
               ],
@@ -124,15 +127,63 @@ class _SetTimerState extends State<SetTimer> {
           )
         ),
         const SizedBox(height: 24,),
-        Text(header,style: const TextStyle(color: Colors.black45)),
+        Padding(
+          padding: const EdgeInsets.only(bottom: 20.0),
+          child: Text(header,style: const TextStyle(color: Colors.black45)),
+        )
       ],
     );
   }
 
   Widget buildButtons(){
-    return Column(
-
-    );
+    return
+      setup ?
+      Center(
+        child:OutlinedButton(
+          child: Text(
+              "Start"
+          ),
+          onPressed: (){
+            start_timer();
+          },
+        )
+      )
+          :
+          started ?
+      Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [OutlinedButton(
+          child: Text(
+              "Pause"
+          ),
+          onPressed: (){
+            stop_timer();
+          },
+        ),
+        ]
+      )
+    :
+    Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          OutlinedButton(
+            child: Text(
+              "reset"
+            ),
+            onPressed: (){
+              timer_reset();
+            },
+          ),
+          OutlinedButton(
+            child: Text(
+                "continue"
+            ),
+            onPressed: (){
+              start_timer();
+            },
+          ),
+        ]
+      );
 
   }
 
@@ -147,14 +198,12 @@ class _SetTimerState extends State<SetTimer> {
     // resets the timer to initial state or the current value based on a flag
     if (setup) {
       setState(() {
-        duration = timer_duration;
+        // print(timerValueController.text.toString());
+        duration = Duration(minutes: int.parse(timerValueController.text.toString()));
       });
     }
-    else if(!started){
-      setState(() => duration = Duration());
-    }
     else {
-      setState(() => duration = timer_duration);
+      setState(() => duration = Duration(minutes: int.parse(timerValueController.text.toString())));
     }
     setState(() {
       setup = true;
@@ -165,15 +214,21 @@ class _SetTimerState extends State<SetTimer> {
     timer = Timer.periodic(second_duration, (timer) => { add_time() });
     setState(() {
       setup = false;
+      started = true;
+      stopped = true;
     });
   }
 
   void add_time(){
-    final addseconds = started? 1 : -1;
+    final addseconds = started? -1 : 1;
     setState(() {
       final seconds = duration.inSeconds + addseconds;
       if ( seconds < 0 ){
         timer?.cancel();
+        setState(() {
+          stopped = false;
+          started = true;
+        });
       }
       else{
         duration = Duration(seconds: seconds);
@@ -184,6 +239,10 @@ class _SetTimerState extends State<SetTimer> {
 
   void stop_timer(){
     timer?.cancel();
+    setState(() {
+      stopped = true;
+      started = false;
+    });
   }
 
 }
