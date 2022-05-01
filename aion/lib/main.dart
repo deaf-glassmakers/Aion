@@ -214,6 +214,7 @@ class _SetTimerState extends State<SetTimer> {
   }
 
   void start_timer() {
+    timer_reset();
     timer = Timer.periodic(second_duration, (timer) => { add_time() });
     setState(() {
       setup = false;
