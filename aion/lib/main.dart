@@ -7,6 +7,8 @@ import 'package:flutter/services.dart';
 import 'package:wakelock/wakelock.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  Wakelock.enable();
   runApp(SetTimer());
 }
 
